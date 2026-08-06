@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CookieBanner } from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   title: "White-Label PPC for Agencies | Generación Ads",
@@ -12,6 +13,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-white text-black">
         {children}
+        <CookieBanner />
       </body>
     </html>
   );
