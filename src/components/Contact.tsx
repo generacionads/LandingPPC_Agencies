@@ -10,14 +10,27 @@ const spendRanges = [
   "$150k+/mo",
 ];
 
-export function Contact() {
-  const [submitted, setSubmitted] = useState(false);
+const FORMSUBMIT_ENDPOINT = "https://formsubmit.co/ajax/javierrevueltag@gmail.com";
 
-  // TODO: wire this up to a real endpoint (API route, Resend, HubSpot, etc.)
-  // before launch — right now it only updates local UI state.
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+type Status = "idle" | "submitting" | "success" | "error";
+
+export function Contact() {
+  const [status, setStatus] = useState<Status>("idle");
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitted(true);
+    setStatus("submitting");
+    try {
+      const res = await fetch(FORMSUBMIT_ENDPOINT, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new FormData(e.currentTarget),
+      });
+      if (!res.ok) throw new Error("Request failed");
+      setStatus("success");
+    } catch {
+      setStatus("error");
+    }
   }
 
   return (
@@ -43,13 +56,18 @@ export function Contact() {
         </div>
 
         <div className="soft-shadow w-full max-w-lg rounded-3xl bg-white p-8">
-          {submitted ? (
+          {status === "success" ? (
             <p className="text-lg">
               Thanks — we&apos;ve got it. We&apos;ll be in touch within one
               business day.
             </p>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <input type="hidden" name="_subject" value="New white-label PPC partner lead" />
+              <input type="hidden" name="_cc" value="mzornoza@generacionads.com" />
+              <input type="hidden" name="_template" value="table" />
+              <input type="hidden" name="_captcha" value="false" />
+
               <div className="grid gap-5 sm:grid-cols-2">
                 <Field label="Agency name" name="agency" required />
                 <Field label="Your name" name="name" required />
@@ -84,10 +102,20 @@ export function Contact() {
               </label>
               <button
                 type="submit"
-                className="pill-shadow mt-1 w-full rounded-full bg-black px-7 py-3.5 text-base text-white transition-colors duration-300 hover:bg-brand-purple sm:w-fit"
+                disabled={status === "submitting"}
+                className="pill-shadow mt-1 w-full rounded-full bg-black px-7 py-3.5 text-base text-white transition-colors duration-300 hover:bg-brand-purple disabled:opacity-60 sm:w-fit"
               >
-                Send
+                {status === "submitting" ? "Sending…" : "Send"}
               </button>
+              {status === "error" ? (
+                <p className="text-sm text-brand-red">
+                  Something went wrong. Please email us directly at{" "}
+                  <a href="mailto:hola@generacionads.com" className="underline">
+                    hola@generacionads.com
+                  </a>
+                  .
+                </p>
+              ) : null}
             </form>
           )}
         </div>
